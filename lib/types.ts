@@ -87,6 +87,19 @@ export interface Layer {
 }
 
 // ─────────────────────────────────────────────
+// Document workspace
+// ─────────────────────────────────────────────
+
+export interface Doc {
+  id: string;
+  name: string;
+  updatedAt: number;
+  html: string;
+  params: ParameterState;
+  layers: Layer[];
+}
+
+// ─────────────────────────────────────────────
 // Fingerprint
 // ─────────────────────────────────────────────
 

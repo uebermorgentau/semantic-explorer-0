@@ -7,12 +7,11 @@ import ParameterPanel from "./parameters/ParameterPanel";
 import StyleFingerprint from "./fingerprint/StyleFingerprint";
 import LayersPanel from "./history/LayersPanel";
 import VersionComparison from "./history/VersionComparison";
-import { useParameterState } from "@/hooks/useParameterState";
+import { useDocuments } from "@/hooks/useDocuments";
 import { useTransform } from "@/hooks/useTransform";
 import { useFingerprint } from "@/hooks/useFingerprint";
 import { useVersionHistory } from "@/hooks/useVersionHistory";
-import { useLayers } from "@/hooks/useLayers";
-import { Layer, ParameterState, SelectionScope, Version } from "@/lib/types";
+import { Layer, SelectionScope, Version } from "@/lib/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Studio() {
@@ -29,18 +28,60 @@ export default function Studio() {
   // Reapply tracking
   const [reapplyingId, setReapplyingId] = useState<string | null>(null);
 
-  // Calibrating state (separate from fingerprint isLoading)
+  // Calibrating state
   const [isCalibrating, setIsCalibrating] = useState(false);
 
   // Compare
   const [compareVersion, setCompareVersion] = useState<Version | null>(null);
 
+  // Doc switcher UI state
+  const [docDropdownOpen, setDocDropdownOpen] = useState(false);
+  const [isRenamingDoc, setIsRenamingDoc] = useState(false);
+  const [renamingValue, setRenamingValue] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   // Hooks
-  const { params, setParam, calibrateParams, resetParams, hasChangedFromDefault } = useParameterState();
+  const {
+    docs,
+    activeDoc,
+    newDoc,
+    switchDoc,
+    renameDoc,
+    saveHTML,
+    params,
+    setParam,
+    calibrateParams,
+    resetParams,
+    hasChangedFromDefault,
+    layers,
+    addLayer,
+    toggleLayer,
+    clearLayers,
+  } = useDocuments();
   const { isLoading, error: transformError, trigger } = useTransform();
   const { scores, isLoading: fpLoading, isStale, error: fpError, analyze, markStale, setScores } = useFingerprint();
   const { versions, saveVersion } = useVersionHistory();
-  const { layers, addLayer, toggleLayer, clearLayers } = useLayers();
+
+  // Sync editor content when active doc changes
+  const prevDocIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevDocIdRef.current === activeDoc.id) return;
+    prevDocIdRef.current = activeDoc.id;
+    editorRef.current?.setHTML(activeDoc.html ?? "");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDoc.id]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!docDropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDocDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [docDropdownOpen]);
 
   // Selection change from editor
   const handleSelectionChange = useCallback((sel: boolean, wordCount: number) => {
@@ -48,10 +89,12 @@ export default function Studio() {
     setSelectionWordCount(wordCount);
   }, []);
 
-  // Content change
+  // Content change — mark stale + debounced save
   const handleContentChange = useCallback(() => {
     markStale();
-  }, [markStale]);
+    const html = editorRef.current?.getHTML() ?? "";
+    saveHTML(html);
+  }, [markStale, saveHTML]);
 
   // Derive scope from selection
   const scope: SelectionScope = hasSelection ? "selection" : "document";
@@ -170,10 +213,7 @@ export default function Studio() {
       if (!res.ok) throw new Error("Fingerprint failed");
       const data = await res.json();
 
-      // Set the fingerprint scores (shows the radar)
       setScores(data);
-
-      // Map fingerprint scores to slider params
       calibrateParams({
         warmth: data.warmth,
         authority: data.authority,
@@ -191,6 +231,12 @@ export default function Studio() {
     }
   }, [calibrateParams, setScores]);
 
+  // Doc rename commit
+  const commitRename = useCallback(() => {
+    renameDoc(activeDoc.id, renamingValue);
+    setIsRenamingDoc(false);
+  }, [renameDoc, activeDoc.id, renamingValue]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -207,9 +253,72 @@ export default function Studio() {
     <div className="h-screen flex flex-col bg-[#080808] overflow-hidden">
       {/* Top bar */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-[#1a1a1a] shrink-0">
-        <span className="text-[10px] tracking-widest uppercase font-mono text-[#333]">
-          Parametric Writing
-        </span>
+        {/* Doc switcher */}
+        <div className="flex items-center gap-3">
+          <div className="relative" ref={dropdownRef}>
+            {isRenamingDoc ? (
+              <input
+                autoFocus
+                value={renamingValue}
+                onChange={(e) => setRenamingValue(e.target.value)}
+                onBlur={commitRename}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") commitRename();
+                  if (e.key === "Escape") setIsRenamingDoc(false);
+                }}
+                className="text-[10px] tracking-widest uppercase font-mono bg-transparent text-[#888] border-b border-[#333] outline-none w-32"
+              />
+            ) : (
+              <button
+                onClick={() => setDocDropdownOpen((v) => !v)}
+                onDoubleClick={() => {
+                  setDocDropdownOpen(false);
+                  setRenamingValue(activeDoc.name);
+                  setIsRenamingDoc(true);
+                }}
+                className="text-[10px] tracking-widest uppercase font-mono text-[#555] hover:text-[#888] transition-colors"
+              >
+                {activeDoc.name}
+              </button>
+            )}
+
+            {docDropdownOpen && (
+              <div className="absolute top-full left-0 mt-2 py-1 bg-[#0e0e0e] border border-[#1f1f1f] rounded-sm z-50 min-w-[180px]">
+                {docs.map((doc) => (
+                  <button
+                    key={doc.id}
+                    onClick={() => {
+                      switchDoc(doc.id);
+                      setDocDropdownOpen(false);
+                    }}
+                    className={`flex items-center justify-between w-full px-3 py-1.5 text-left text-[9px] font-mono transition-colors ${
+                      doc.id === activeDoc.id
+                        ? "text-[#666]"
+                        : "text-[#333] hover:text-[#666]"
+                    }`}
+                  >
+                    <span>{doc.name}</span>
+                    {doc.id === activeDoc.id && (
+                      <span className="text-[#2a2a2a]">·</span>
+                    )}
+                  </button>
+                ))}
+                <div className="border-t border-[#1a1a1a] my-1" />
+                <button
+                  onClick={() => {
+                    newDoc();
+                    setDocDropdownOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-1.5 text-[9px] font-mono text-[#2a2a2a] hover:text-[#555] transition-colors"
+                >
+                  + new document
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Actions */}
         <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger
