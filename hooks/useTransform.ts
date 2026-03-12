@@ -2,24 +2,21 @@
 import { useState, useCallback } from "react";
 import { ParameterState, SelectionScope } from "@/lib/types";
 
-export type TransformState = {
-  isLoading: boolean;
-  previewText: string | null;
-  error: string | null;
-};
-
 export function useTransform() {
-  const [state, setState] = useState<TransformState>({
-    isLoading: false,
-    previewText: null,
-    error: null,
-  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const trigger = useCallback(
-    async (text: string, scope: SelectionScope, params: ParameterState) => {
+    async (
+      text: string,
+      scope: SelectionScope,
+      params: ParameterState,
+      onResult: (result: string) => void
+    ) => {
       if (!text.trim()) return;
 
-      setState({ isLoading: true, previewText: null, error: null });
+      setIsLoading(true);
+      setError(null);
 
       try {
         const res = await fetch("/api/transform", {
@@ -34,21 +31,15 @@ export function useTransform() {
         }
 
         const data = await res.json();
-        setState({ isLoading: false, previewText: data.text, error: null });
+        onResult(data.text);
       } catch (err) {
-        setState({
-          isLoading: false,
-          previewText: null,
-          error: err instanceof Error ? err.message : "Transform failed",
-        });
+        setError(err instanceof Error ? err.message : "Transform failed");
+      } finally {
+        setIsLoading(false);
       }
     },
     []
   );
 
-  const discard = useCallback(() => {
-    setState({ isLoading: false, previewText: null, error: null });
-  }, []);
-
-  return { ...state, trigger, discard };
+  return { isLoading, error, trigger };
 }

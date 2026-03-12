@@ -75,20 +75,20 @@ export default function VersionComparison({
 
   return (
     <Dialog open={!!compareVersion} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl bg-[#0a0a0a] border border-[#1f1f1f] rounded-sm p-0">
+      <DialogContent className="max-w-6xl w-[90vw] bg-[#0a0a0a] border border-[#1f1f1f] rounded-sm p-0">
         <DialogHeader className="px-6 py-4 border-b border-[#1a1a1a]">
           <DialogTitle className="text-[10px] tracking-widest uppercase font-mono text-[#4a4a4a]">
             Compare
           </DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 divide-x divide-[#1a1a1a] max-h-[60vh] overflow-auto">
-          <div className="p-6">
+        <div className="grid grid-cols-2 divide-x divide-[#1a1a1a] max-h-[70vh] overflow-auto">
+          <div className="p-8">
             <p className="text-[9px] tracking-widest uppercase font-mono text-[#333] mb-4">
               {compareVersion.label}
             </p>
             <DiffView tokens={left} />
           </div>
-          <div className="p-6">
+          <div className="p-8">
             <p className="text-[9px] tracking-widest uppercase font-mono text-[#7c6af5] mb-4">
               Current
             </p>

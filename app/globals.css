@@ -129,12 +129,16 @@
   height: 0;
 }
 
-/* Preview highlight for pending transform */
-.tiptap .transform-preview {
-  background: rgba(124, 106, 245, 0.08);
-  border-left: 2px solid var(--layer-conceptual);
-  padding-left: 0.5rem;
-  border-radius: 0;
+/* Transform flash animation */
+@keyframes transform-flash {
+  0% { background: rgba(124, 106, 245, 0.14); }
+  60% { background: rgba(124, 106, 245, 0.06); }
+  100% { background: transparent; }
+}
+
+.transform-flash {
+  animation: transform-flash 1.6s ease-out forwards;
+  border-radius: 2px;
 }
 
 /* ─────────────────────────────────────────────

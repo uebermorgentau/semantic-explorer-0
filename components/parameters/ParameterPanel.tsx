@@ -2,8 +2,7 @@
 import { RotateCcw } from "lucide-react";
 import { motion } from "framer-motion";
 import LayerSection from "./LayerSection";
-import ScopeSelector from "./ScopeSelector";
-import { ParameterState, SelectionScope } from "@/lib/types";
+import { ParameterState } from "@/lib/types";
 import { LAYER_PARAMS, LAYER_LABEL } from "@/lib/parameters";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -13,9 +12,8 @@ interface Props {
   onParamChange: (key: keyof ParameterState, value: number) => void;
   onReset: () => void;
   hasChangedFromDefault: boolean;
-  scope: SelectionScope;
-  onScopeChange: (scope: SelectionScope) => void;
   hasSelection: boolean;
+  selectionWordCount: number;
   onApply: () => void;
   isLoading: boolean;
 }
@@ -27,9 +25,8 @@ export default function ParameterPanel({
   onParamChange,
   onReset,
   hasChangedFromDefault,
-  scope,
-  onScopeChange,
   hasSelection,
+  selectionWordCount,
   onApply,
   isLoading,
 }: Props) {
@@ -74,17 +71,13 @@ export default function ParameterPanel({
       </div>
 
       {/* Apply footer */}
-      <div className="px-5 py-4 border-t border-[#1a1a1a] space-y-3">
-        <div>
-          <p className="text-[9px] tracking-widest uppercase font-mono text-[#333] mb-2">
-            Apply to
-          </p>
-          <ScopeSelector
-            scope={scope}
-            onChange={onScopeChange}
-            hasSelection={hasSelection}
-          />
-        </div>
+      <div className="px-5 py-4 border-t border-[#1a1a1a] space-y-2">
+        {/* Scope context — auto-detected */}
+        <p className="text-[9px] font-mono text-[#333]">
+          {hasSelection
+            ? `↳ Selection · ${selectionWordCount} word${selectionWordCount !== 1 ? "s" : ""}`
+            : "↳ Full document"}
+        </p>
         <Button
           onClick={onApply}
           disabled={isLoading}

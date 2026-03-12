@@ -1,10 +1,8 @@
 "use client";
-import { ScanLine, RefreshCw } from "lucide-react";
-import { motion } from "framer-motion";
+import { ScanLine, RefreshCw, Crosshair } from "lucide-react";
 import RadarChart from "./RadarChart";
-import { FingerprintScores, ParameterState, FINGERPRINT_AXES } from "@/lib/types";
+import { FingerprintScores, ParameterState } from "@/lib/types";
 
-// Compute target polygon from current parameter state
 function paramsToTarget(params: ParameterState): Record<string, number> {
   return {
     warmth: params.warmth,
@@ -24,6 +22,8 @@ interface Props {
   isStale: boolean;
   error: string | null;
   onAnalyze: () => void;
+  onCalibrate: () => void;
+  isCalibrating: boolean;
   params: ParameterState;
 }
 
@@ -33,6 +33,8 @@ export default function StyleFingerprint({
   isStale,
   error,
   onAnalyze,
+  onCalibrate,
+  isCalibrating,
   params,
 }: Props) {
   const target = paramsToTarget(params);
@@ -45,30 +47,44 @@ export default function StyleFingerprint({
             Style Fingerprint
           </span>
           {isStale && (
-            <span className="text-[9px] font-mono text-[#333]">stale</span>
+            <span className="text-[9px] font-mono text-[#2a2a2a]">stale</span>
           )}
         </div>
-        <button
-          onClick={onAnalyze}
-          disabled={isLoading}
-          className="flex items-center gap-1 text-[9px] font-mono text-[#333] hover:text-[#888] transition-colors disabled:opacity-30"
-        >
-          {isLoading ? (
-            <RefreshCw className="w-2.5 h-2.5 animate-spin" />
-          ) : (
-            <ScanLine className="w-2.5 h-2.5" />
-          )}
-          {isLoading ? "Analyzing" : "Analyze"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onCalibrate}
+            disabled={isCalibrating || isLoading}
+            title="Set sliders to match this text"
+            className="flex items-center gap-1 text-[9px] font-mono text-[#333] hover:text-[#c9984a] transition-colors disabled:opacity-30"
+          >
+            {isCalibrating ? (
+              <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+            ) : (
+              <Crosshair className="w-2.5 h-2.5" />
+            )}
+            Calibrate
+          </button>
+          <button
+            onClick={onAnalyze}
+            disabled={isLoading || isCalibrating}
+            className="flex items-center gap-1 text-[9px] font-mono text-[#333] hover:text-[#888] transition-colors disabled:opacity-30"
+          >
+            {isLoading ? (
+              <RefreshCw className="w-2.5 h-2.5 animate-spin" />
+            ) : (
+              <ScanLine className="w-2.5 h-2.5" />
+            )}
+            Analyze
+          </button>
+        </div>
       </div>
 
-      {/* Radar */}
       <div className="aspect-square w-full">
         {!scores && !isLoading ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2 border border-dashed border-[#1a1a1a] rounded-sm">
             <ScanLine className="w-4 h-4 text-[#222]" />
             <span className="text-[9px] font-mono text-[#222]">
-              Analyze text to see fingerprint
+              Analyze to see fingerprint
             </span>
           </div>
         ) : (
@@ -80,7 +96,6 @@ export default function StyleFingerprint({
         <p className="mt-2 text-[9px] font-mono text-red-800">{error}</p>
       )}
 
-      {/* Legend */}
       <div className="mt-3 flex gap-4">
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-px bg-[#7c6af5]" />
@@ -97,6 +112,10 @@ export default function StyleFingerprint({
           <span className="text-[9px] font-mono text-[#333]">Target</span>
         </div>
       </div>
+
+      <p className="mt-3 text-[9px] font-mono text-[#1f1f1f] leading-relaxed">
+        Calibrate sets sliders to where this text sits. Move sliders to open a gap — Apply closes it.
+      </p>
     </div>
   );
 }

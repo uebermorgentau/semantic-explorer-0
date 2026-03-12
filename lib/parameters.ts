@@ -54,3 +54,38 @@ export const LAYER_LABEL: Record<string, string> = {
   structure: "Structure",
   conceptual: "Conceptual",
 };
+
+// Human-readable direction labels for auto-generated layer names
+const PARAM_DIRECTION: Record<keyof ParameterState, [string, string]> = {
+  warmth: ["Colder", "Warmer"],
+  authority: ["Tentative", "Commanding"],
+  energy: ["Subdued", "Energetic"],
+  formality: ["Casual", "Formal"],
+  optimism: ["Realist", "Optimistic"],
+  confidence: ["Hedged", "Confident"],
+  sentenceLength: ["Shorter", "Longer"],
+  rhythm: ["Staccato", "Flowing"],
+  density: ["Sparse", "Denser"],
+  directness: ["Elaborate", "Direct"],
+  abstraction: ["Concrete", "Abstract"],
+  strategicOperational: ["Operational", "Strategic"],
+  analyticalNarrative: ["Narrative", "Analytical"],
+  firstPrinciples: ["Applied", "Foundational"],
+};
+
+export function autoLabelFromParams(params: ParameterState): string {
+  const entries = (Object.keys(params) as (keyof ParameterState)[])
+    .map((key) => ({ key, dev: Math.abs(params[key] - 50) }))
+    .filter((e) => e.dev > 8)
+    .sort((a, b) => b.dev - a.dev)
+    .slice(0, 2);
+
+  if (entries.length === 0) return "Neutral";
+
+  return entries
+    .map(({ key }) => {
+      const [low, high] = PARAM_DIRECTION[key];
+      return params[key] > 50 ? high : low;
+    })
+    .join(" · ");
+}

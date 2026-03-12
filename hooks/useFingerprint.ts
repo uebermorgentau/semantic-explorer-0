@@ -46,5 +46,5 @@ export function useFingerprint() {
     if (scores) setIsStale(true);
   }, [scores]);
 
-  return { scores, isLoading, error, isStale, analyze, markStale };
+  return { scores, setScores, isLoading, error, isStale, analyze, markStale };
 }

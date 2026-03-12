@@ -154,13 +154,7 @@ export function buildTransformPrompt(
       : "No strong parameter preferences set — make minimal changes while preserving the original voice.";
 
   const scopeLabel =
-    scope === "document"
-      ? "the following text"
-      : scope === "paragraph"
-      ? "the following paragraph"
-      : scope === "sentence"
-      ? "the following sentence"
-      : "the following words";
+    scope === "document" ? "the following text" : "the following selected text";
 
   const system = `You are a writing transformation engine. Rewrite ${scopeLabel} according to the parameters below.
 

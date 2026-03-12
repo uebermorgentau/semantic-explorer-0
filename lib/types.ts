@@ -36,7 +36,7 @@ export interface ParameterState {
 // Selection / scope
 // ─────────────────────────────────────────────
 
-export type SelectionScope = "document" | "paragraph" | "sentence" | "words";
+export type SelectionScope = "document" | "selection";
 
 export interface EditorSelection {
   scope: SelectionScope;
@@ -68,6 +68,22 @@ export interface Version {
   html: string;
   params: ParameterState;
   label: string;
+}
+
+// ─────────────────────────────────────────────
+// Transform Layers (non-linear history)
+// ─────────────────────────────────────────────
+
+export interface Layer {
+  id: string;
+  timestamp: number;
+  label: string;           // auto-generated from top deviating params
+  params: ParameterState;  // slider values at transform time
+  scope: SelectionScope;
+  fromHTML: string;        // editor state BEFORE transform
+  toHTML: string;          // editor state AFTER transform
+  isActive: boolean;       // currently shown?
+  selectionWordCount?: number;
 }
 
 // ─────────────────────────────────────────────

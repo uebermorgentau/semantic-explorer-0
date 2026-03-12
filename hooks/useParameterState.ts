@@ -17,6 +17,14 @@ export function useParameterState() {
     [setParams]
   );
 
+  // Bulk setter for calibration — merges partial state
+  const calibrateParams = useCallback(
+    (partial: Partial<ParameterState>) => {
+      setParams((prev) => ({ ...prev, ...partial }));
+    },
+    [setParams]
+  );
+
   const resetParams = useCallback(() => {
     setParams(DEFAULT_PARAMETERS);
   }, [setParams]);
@@ -27,5 +35,5 @@ export function useParameterState() {
       DEFAULT_PARAMETERS[k as keyof ParameterState]
   );
 
-  return { params, setParam, resetParams, hasChangedFromDefault };
+  return { params, setParam, calibrateParams, resetParams, hasChangedFromDefault };
 }
