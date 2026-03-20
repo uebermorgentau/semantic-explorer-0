@@ -43,7 +43,7 @@ function wordDiff(a: string, b: string): { left: DiffToken[]; right: DiffToken[]
 
 function DiffView({ tokens }: { tokens: DiffToken[] }) {
   return (
-    <p className="text-sm leading-relaxed font-sans text-[#888]">
+    <p className="text-sm leading-relaxed font-sans text-[var(--c-tx-5)]">
       {tokens.map((t, i) => (
         <span
           key={i}
@@ -75,15 +75,15 @@ export default function VersionComparison({
 
   return (
     <Dialog open={!!compareVersion} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-6xl w-[90vw] bg-[#0a0a0a] border border-[#1f1f1f] rounded-sm p-0">
-        <DialogHeader className="px-6 py-4 border-b border-[#1a1a1a]">
-          <DialogTitle className="text-[10px] tracking-widest uppercase font-mono text-[#4a4a4a]">
+      <DialogContent className="max-w-6xl w-[90vw] bg-[var(--c-bg)] border border-[var(--c-border-2)] rounded-sm p-0">
+        <DialogHeader className="px-6 py-4 border-b border-[var(--c-border-1)]">
+          <DialogTitle className="text-[10px] tracking-widest uppercase font-mono text-[var(--c-tx-2)]">
             Compare
           </DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 divide-x divide-[#1a1a1a] max-h-[70vh] overflow-auto">
+        <div className="grid grid-cols-2 divide-x divide-[var(--c-border-1)] max-h-[70vh] overflow-auto">
           <div className="p-8">
-            <p className="text-[9px] tracking-widest uppercase font-mono text-[#333] mb-4">
+            <p className="text-[9px] tracking-widest uppercase font-mono text-[var(--c-tx-1)] mb-4">
               {compareVersion.label}
             </p>
             <DiffView tokens={left} />

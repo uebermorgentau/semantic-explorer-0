@@ -34,16 +34,16 @@ export default function LayersPanel({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -8 }}
       transition={{ duration: 0.2 }}
-      className="h-full flex flex-col border-r border-[#1f1f1f] bg-[#080808] w-[260px]"
+      className="h-full flex flex-col border-r border-[var(--c-border-2)] bg-[var(--c-bg)] w-[260px]"
     >
-      <div className="px-5 py-4 flex items-center justify-between border-b border-[#1a1a1a]">
-        <span className="text-[10px] tracking-widest uppercase font-mono text-[#4a4a4a]">
+      <div className="px-5 py-4 flex items-center justify-between border-b border-[var(--c-border-1)]">
+        <span className="text-[10px] tracking-widest uppercase font-mono text-[var(--c-tx-2)]">
           Transforms
         </span>
         {layers.length > 0 && (
           <button
             onClick={onClear}
-            className="text-[9px] font-mono text-[#222] hover:text-[#555] flex items-center gap-1 transition-colors"
+            className="text-[9px] font-mono text-[var(--c-tx-0)] hover:text-[var(--c-tx-3)] flex items-center gap-1 transition-colors"
           >
             <Trash2 className="w-2.5 h-2.5" />
             clear
@@ -54,14 +54,14 @@ export default function LayersPanel({
       <div className="flex-1 overflow-y-auto">
         {layers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 gap-2">
-            <Layers className="w-4 h-4 text-[#1f1f1f]" />
-            <span className="text-[9px] font-mono text-[#222]">No transforms yet</span>
+            <Layers className="w-4 h-4 text-[var(--c-border-2)]" />
+            <span className="text-[9px] font-mono text-[var(--c-tx-0)]">No transforms yet</span>
           </div>
         ) : (
           <>
             {/* Explanation */}
-            <div className="px-5 py-3 border-b border-[#111]">
-              <p className="text-[9px] font-mono text-[#2a2a2a] leading-relaxed">
+            <div className="px-5 py-3 border-b border-[var(--c-border-0)]">
+              <p className="text-[9px] font-mono text-[var(--c-tx-0)] leading-relaxed">
                 Toggle to preview without a transform. Re-apply runs its recipe against the current text.
               </p>
             </div>
@@ -73,12 +73,12 @@ export default function LayersPanel({
                     <div className="flex-1 min-w-0">
                       <span
                         className={`text-[11px] font-mono block truncate transition-colors ${
-                          layer.isActive ? "text-[#888]" : "text-[#333] line-through"
+                          layer.isActive ? "text-[var(--c-tx-5)]" : "text-[var(--c-tx-1)] line-through"
                         }`}
                       >
                         {layer.label}
                       </span>
-                      <span className="text-[9px] font-mono text-[#2a2a2a]">
+                      <span className="text-[9px] font-mono text-[var(--c-tx-0)]">
                         {timeAgo(layer.timestamp)}
                         {layer.scope === "selection" && layer.selectionWordCount
                           ? ` · ${layer.selectionWordCount}w`
@@ -90,7 +90,7 @@ export default function LayersPanel({
                     <button
                       onClick={() => onToggle(layer.id)}
                       className={`w-7 h-4 rounded-sm flex-shrink-0 relative transition-colors mt-0.5 ${
-                        layer.isActive ? "bg-[#7c6af5]" : "bg-[#222]"
+                        layer.isActive ? "bg-[#7c6af5]" : "bg-[var(--c-border-3)]"
                       }`}
                       title={layer.isActive ? "Toggle off (revert)" : "Toggle on (restore)"}
                     >
@@ -106,7 +106,7 @@ export default function LayersPanel({
                   <button
                     onClick={() => onReapply(layer)}
                     disabled={isReapplying === layer.id}
-                    className="flex items-center gap-1 text-[9px] font-mono text-[#2a2a2a] hover:text-[#666] transition-colors disabled:opacity-30"
+                    className="flex items-center gap-1 text-[9px] font-mono text-[var(--c-tx-0)] hover:text-[var(--c-tx-4)] transition-colors disabled:opacity-30"
                   >
                     {isReapplying === layer.id ? (
                       <RefreshCw className="w-2 h-2 animate-spin" />
@@ -116,7 +116,7 @@ export default function LayersPanel({
                     Re-apply recipe
                   </button>
                 </div>
-                {i < layers.length - 1 && <Separator className="bg-[#0f0f0f]" />}
+                {i < layers.length - 1 && <Separator className="bg-[var(--c-deep)]" />}
               </div>
             ))}
           </>

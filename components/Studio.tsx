@@ -1,17 +1,16 @@
 "use client";
 import { useRef, useState, useCallback, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Layers, ScanLine, Save } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { Layers, Save, Sun, Moon } from "lucide-react";
 import WritingEditor, { WritingEditorRef } from "./editor/WritingEditor";
 import ParameterPanel from "./parameters/ParameterPanel";
-import StyleFingerprint from "./fingerprint/StyleFingerprint";
 import LayersPanel from "./history/LayersPanel";
 import VersionComparison from "./history/VersionComparison";
 import { useDocuments } from "@/hooks/useDocuments";
 import { useTransform } from "@/hooks/useTransform";
 import { useFingerprint } from "@/hooks/useFingerprint";
 import { useVersionHistory } from "@/hooks/useVersionHistory";
-import { Layer, SelectionScope, Version } from "@/lib/types";
+import { Layer, ParameterState, SelectionScope, Version } from "@/lib/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Studio() {
@@ -19,7 +18,9 @@ export default function Studio() {
 
   // Panel visibility
   const [showLayers, setShowLayers] = useState(false);
-  const [showFingerprint, setShowFingerprint] = useState(false);
+
+  // Theme
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   // Selection state
   const [hasSelection, setHasSelection] = useState(false);
@@ -28,7 +29,8 @@ export default function Studio() {
   // Reapply tracking
   const [reapplyingId, setReapplyingId] = useState<string | null>(null);
 
-  // Calibrating state
+  // Analyze / Calibrate state
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isCalibrating, setIsCalibrating] = useState(false);
 
   // Compare
@@ -59,8 +61,35 @@ export default function Studio() {
     clearLayers,
   } = useDocuments();
   const { isLoading, error: transformError, trigger } = useTransform();
-  const { scores, isLoading: fpLoading, isStale, error: fpError, analyze, markStale, setScores } = useFingerprint();
-  const { versions, saveVersion } = useVersionHistory();
+  const { scores, isStale, analyze, markStale, setScores } = useFingerprint();
+  const { saveVersion } = useVersionHistory();
+
+  // Theme management
+  useEffect(() => {
+    const saved = localStorage.getItem("pwi-theme") as "dark" | "light" | null;
+    if (saved === "light") setTheme("light");
+  }, []);
+  useEffect(() => {
+    const html = document.documentElement;
+    html.classList.toggle("light", theme === "light");
+    html.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("pwi-theme", theme);
+  }, [theme]);
+
+  // Map fingerprint scores → slider param keys for ghost markers
+  const fingerprintForSliders: Partial<Record<keyof ParameterState, number>> | undefined =
+    scores
+      ? {
+          warmth: scores.warmth,
+          authority: scores.authority,
+          formality: scores.formality,
+          sentenceLength: scores.sentenceLength,
+          density: scores.density,
+          abstraction: scores.abstraction,
+          strategicOperational: scores.strategic,
+          analyticalNarrative: scores.analytical,
+        }
+      : undefined;
 
   // Sync editor content when active doc changes
   const prevDocIdRef = useRef<string | null>(null);
@@ -192,13 +221,19 @@ export default function Studio() {
     }
   }, [saveVersion, params]);
 
-  // Analyze fingerprint
-  const handleAnalyze = useCallback(() => {
+  // Analyze: run fingerprint → show ghost markers on sliders
+  const handleAnalyze = useCallback(async () => {
     const text = editorRef.current?.getText() ?? "";
-    analyze(text);
+    if (!text.trim()) return;
+    setIsAnalyzing(true);
+    try {
+      await analyze(text);
+    } finally {
+      setIsAnalyzing(false);
+    }
   }, [analyze]);
 
-  // Calibrate: run fingerprint analysis, then set sliders to match
+  // Calibrate: run fingerprint → move sliders to match text
   const handleCalibrate = useCallback(async () => {
     const text = editorRef.current?.getText() ?? "";
     if (!text.trim()) return;
@@ -250,9 +285,9 @@ export default function Studio() {
   }, [handleApply]);
 
   return (
-    <div className="h-screen flex flex-col bg-[#080808] overflow-hidden">
+    <div className="h-screen flex flex-col bg-[var(--c-bg)] overflow-hidden">
       {/* Top bar */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-[#1a1a1a] shrink-0">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-[var(--c-border-1)] shrink-0">
         {/* Doc switcher */}
         <div className="flex items-center gap-3">
           <div className="relative" ref={dropdownRef}>
@@ -266,7 +301,7 @@ export default function Studio() {
                   if (e.key === "Enter") commitRename();
                   if (e.key === "Escape") setIsRenamingDoc(false);
                 }}
-                className="text-[10px] tracking-widest uppercase font-mono bg-transparent text-[#888] border-b border-[#333] outline-none w-32"
+                className="text-[10px] tracking-widest uppercase font-mono bg-transparent text-[var(--c-tx-5)] border-b border-[var(--c-tx-1)] outline-none w-32"
               />
             ) : (
               <button
@@ -276,14 +311,14 @@ export default function Studio() {
                   setRenamingValue(activeDoc.name);
                   setIsRenamingDoc(true);
                 }}
-                className="text-[10px] tracking-widest uppercase font-mono text-[#555] hover:text-[#888] transition-colors"
+                className="text-[10px] tracking-widest uppercase font-mono text-[var(--c-tx-3)] hover:text-[var(--c-tx-5)] transition-colors"
               >
                 {activeDoc.name}
               </button>
             )}
 
             {docDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 py-1 bg-[#0e0e0e] border border-[#1f1f1f] rounded-sm z-50 min-w-[180px]">
+              <div className="absolute top-full left-0 mt-2 py-1 bg-[var(--c-panel)] border border-[var(--c-border-2)] rounded-sm z-50 min-w-[180px]">
                 {docs.map((doc) => (
                   <button
                     key={doc.id}
@@ -293,23 +328,23 @@ export default function Studio() {
                     }}
                     className={`flex items-center justify-between w-full px-3 py-1.5 text-left text-[9px] font-mono transition-colors ${
                       doc.id === activeDoc.id
-                        ? "text-[#666]"
-                        : "text-[#333] hover:text-[#666]"
+                        ? "text-[var(--c-tx-4)]"
+                        : "text-[var(--c-tx-1)] hover:text-[var(--c-tx-4)]"
                     }`}
                   >
                     <span>{doc.name}</span>
                     {doc.id === activeDoc.id && (
-                      <span className="text-[#2a2a2a]">·</span>
+                      <span className="text-[var(--c-tx-0)]">·</span>
                     )}
                   </button>
                 ))}
-                <div className="border-t border-[#1a1a1a] my-1" />
+                <div className="border-t border-[var(--c-border-1)] my-1" />
                 <button
                   onClick={() => {
                     newDoc();
                     setDocDropdownOpen(false);
                   }}
-                  className="block w-full text-left px-3 py-1.5 text-[9px] font-mono text-[#2a2a2a] hover:text-[#555] transition-colors"
+                  className="block w-full text-left px-3 py-1.5 text-[9px] font-mono text-[var(--c-tx-0)] hover:text-[var(--c-tx-3)] transition-colors"
                 >
                   + new document
                 </button>
@@ -322,33 +357,33 @@ export default function Studio() {
         <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger
-              render={<button onClick={handleSaveVersion} className="p-2 text-[#2a2a2a] hover:text-[#666] transition-colors" />}
+              render={<button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} className="p-2 text-[var(--c-tx-0)] hover:text-[var(--c-tx-4)] transition-colors" />}
+            >
+              {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            </TooltipTrigger>
+            <TooltipContent className="bg-[var(--c-panel)] border-[var(--c-border-3)] text-[var(--c-tx-5)] text-[10px] font-mono rounded-sm">
+              {theme === "dark" ? "Light mode" : "Dark mode"}
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger
+              render={<button onClick={handleSaveVersion} className="p-2 text-[var(--c-tx-0)] hover:text-[var(--c-tx-4)] transition-colors" />}
             >
               <Save className="w-3.5 h-3.5" />
             </TooltipTrigger>
-            <TooltipContent className="bg-[#111] border-[#222] text-[#888] text-[10px] font-mono rounded-sm">
+            <TooltipContent className="bg-[var(--c-panel)] border-[var(--c-border-3)] text-[var(--c-tx-5)] text-[10px] font-mono rounded-sm">
               Save version
             </TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger
-              render={<button onClick={() => setShowFingerprint((v) => !v)} className={`p-2 transition-colors ${showFingerprint ? "text-[#7c6af5]" : "text-[#2a2a2a] hover:text-[#666]"}`} />}
-            >
-              <ScanLine className="w-3.5 h-3.5" />
-            </TooltipTrigger>
-            <TooltipContent className="bg-[#111] border-[#222] text-[#888] text-[10px] font-mono rounded-sm">
-              Style fingerprint
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger
-              render={<button onClick={() => setShowLayers((v) => !v)} className={`p-2 transition-colors ${showLayers ? "text-[#c9984a]" : "text-[#2a2a2a] hover:text-[#666]"}`} />}
+              render={<button onClick={() => setShowLayers((v) => !v)} className={`p-2 transition-colors ${showLayers ? "text-[#c9984a]" : "text-[var(--c-tx-0)] hover:text-[var(--c-tx-4)]"}`} />}
             >
               <Layers className="w-3.5 h-3.5" />
             </TooltipTrigger>
-            <TooltipContent className="bg-[#111] border-[#222] text-[#888] text-[10px] font-mono rounded-sm">
+            <TooltipContent className="bg-[var(--c-panel)] border-[var(--c-border-3)] text-[var(--c-tx-5)] text-[10px] font-mono rounded-sm">
               Transform layers
             </TooltipContent>
           </Tooltip>
@@ -390,34 +425,7 @@ export default function Studio() {
         </div>
 
         {/* Right panel */}
-        <div className="w-[280px] shrink-0 flex flex-col border-l border-[#1f1f1f] overflow-hidden">
-          {/* Fingerprint */}
-          <AnimatePresence>
-            {showFingerprint && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="border-b border-[#1a1a1a] overflow-hidden"
-              >
-                <div className="pt-5">
-                  <StyleFingerprint
-                    scores={scores}
-                    isLoading={fpLoading}
-                    isStale={isStale}
-                    error={fpError}
-                    onAnalyze={handleAnalyze}
-                    onCalibrate={handleCalibrate}
-                    isCalibrating={isCalibrating}
-                    params={params}
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Parameters */}
+        <div className="w-[280px] shrink-0 flex flex-col border-l border-[var(--c-border-2)] overflow-hidden">
           <div className="flex-1 overflow-hidden">
             <ParameterPanel
               params={params}
@@ -428,6 +436,12 @@ export default function Studio() {
               selectionWordCount={selectionWordCount}
               onApply={handleApply}
               isLoading={isLoading}
+              fingerprint={fingerprintForSliders}
+              onAnalyze={handleAnalyze}
+              onCalibrate={handleCalibrate}
+              isAnalyzing={isAnalyzing}
+              isCalibrating={isCalibrating}
+              isStale={isStale}
             />
           </div>
         </div>

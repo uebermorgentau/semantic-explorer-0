@@ -64,9 +64,39 @@
   --layer-tone: #c9984a;
   --layer-structure: #5a6a7e;
   --layer-conceptual: #7c6af5;
+
+  /* App surface tokens */
+  --c-bg: #080808;
+  --c-panel: #0e0e0e;
+  --c-deep: #0f0f0f;
+
+  /* Border tokens */
+  --c-border-0: #111;
+  --c-border-1: #1a1a1a;
+  --c-border-2: #1f1f1f;
+  --c-border-3: #222;
+
+  /* Text tokens */
+  --c-tx-0: #2a2a2a;
+  --c-tx-1: #333;
+  --c-tx-2: #4a4a4a;
+  --c-tx-3: #555;
+  --c-tx-4: #666;
+  --c-tx-5: #888;
+  --c-tx-6: #e2e2e2;
+
+  /* Apply button */
+  --c-btn-bg: #e2e2e2;
+  --c-btn-fg: #080808;
+  --c-btn-hover: #ffffff;
+
+  /* Misc */
+  --c-slider-track: #222;
+  --c-placeholder: #2a2a2a;
+  --c-ghost-marker: rgba(255, 255, 255, 0.28);
 }
 
-/* shadcn dark mode — we force dark always */
+/* shadcn dark class — same as :root */
 .dark {
   --background: #080808;
   --foreground: #e2e2e2;
@@ -86,6 +116,51 @@
   --border: #1f1f1f;
   --input: #1a1a1a;
   --ring: #333333;
+}
+
+/* ─────────────────────────────────────────────
+   Light theme overrides
+───────────────────────────────────────────── */
+.light {
+  --background: #f5f5f5;
+  --foreground: #111;
+  --card: #eeeeee;
+  --card-foreground: #111;
+  --popover: #efefef;
+  --popover-foreground: #111;
+  --primary: #111;
+  --primary-foreground: #f5f5f5;
+  --secondary: #e8e8e8;
+  --secondary-foreground: #111;
+  --muted: #e8e8e8;
+  --muted-foreground: #888;
+  --accent: #e2e2e2;
+  --accent-foreground: #111;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: #e0e0e0;
+  --input: #e5e5e5;
+  --ring: #ccc;
+
+  --c-bg: #f5f5f5;
+  --c-panel: #efefef;
+  --c-deep: #ebebeb;
+  --c-border-0: #e8e8e8;
+  --c-border-1: #e5e5e5;
+  --c-border-2: #e0e0e0;
+  --c-border-3: #d8d8d8;
+  --c-tx-0: #c8c8c8;
+  --c-tx-1: #b0b0b0;
+  --c-tx-2: #888;
+  --c-tx-3: #777;
+  --c-tx-4: #666;
+  --c-tx-5: #444;
+  --c-tx-6: #111;
+  --c-btn-bg: #111;
+  --c-btn-fg: #f5f5f5;
+  --c-btn-hover: #000;
+  --c-slider-track: #d8d8d8;
+  --c-placeholder: #c0c0c0;
+  --c-ghost-marker: rgba(0, 0, 0, 0.2);
 }
 
 @layer base {
@@ -123,7 +198,7 @@
 
 .tiptap .is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: #2a2a2a;
+  color: var(--c-placeholder);
   pointer-events: none;
   float: left;
   height: 0;
@@ -146,7 +221,7 @@
 ───────────────────────────────────────────── */
 [data-slot="slider-track"] {
   height: 1px !important;
-  background: #222 !important;
+  background: var(--c-slider-track) !important;
   border-radius: 0 !important;
 }
 
